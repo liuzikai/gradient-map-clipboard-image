@@ -1,5 +1,5 @@
 import pasteboard
-import io
+from io import BytesIO
 from PIL import Image
 import numpy as np
 
@@ -13,27 +13,24 @@ if in_bytes is None:
     print("Clipboard doesn't contain an image")
 
 else:
-    in_stream = io.BytesIO(in_bytes)
+    in_stream = BytesIO(in_bytes)
     img: Image.Image = Image.open(in_stream)
 
-    data = np.array(img.getdata())  # RGBA
-
-    new_data = np.empty((data.shape[0], 3), dtype=np.uint8)  # RGB
+    data = np.array(img.getdata())[:, :3] / 255  # RGB(A) to RGB, normalized
 
     # Apply gradient map on the image
     # Reference: https://community.adobe.com/t5/photoshop/what-is-the-mathmatical-formula-of-gradient-map/td-p/10502214
-    for i in range(data.shape[0]):
-        lum = (float(data[i][0]) / 255) * 0.30 + (float(data[i][1]) / 255) * 0.59 + (float(data[i][2]) / 255) * 0.11
-        new_data[i] = np.array([(1 - lum) * FG[0] + lum * BG[0],
-                                (1 - lum) * FG[1] + lum * BG[1],
-                                (1 - lum) * FG[2] + lum * BG[2]], dtype=np.uint8)
+    lum = np.dot(data, [0.3, 0.59, 0.11])
+
+    new_data = (np.outer(1 - lum, FG) + np.outer(lum, BG)).astype(np.uint8)
 
     new_data = new_data.reshape((img.height, img.width, 3))
+
     new_img = Image.fromarray(new_data, 'RGB')
     # new_img.show()
 
     # Put image back to pasteboard
-    out_stream = io.BytesIO()
+    out_stream = BytesIO()
     new_img.save(out_stream, format='png', dpi=(144, 144))
     pb.set_contents(out_stream.getvalue(), type=pasteboard.PNG)
 
