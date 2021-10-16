@@ -7,7 +7,7 @@ BG = [58, 63, 74]
 FG = [221, 221, 221]
 
 pb = pasteboard.Pasteboard()
-in_bytes = pb.get_contents(pasteboard.PNG)
+in_bytes = pb.get_contents(pasteboard.PNG) or pb.get_contents(pasteboard.TIFF)
 
 if in_bytes is None:
     print("Clipboard doesn't contain an image")
