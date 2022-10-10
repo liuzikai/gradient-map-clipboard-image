@@ -1,7 +1,13 @@
+import argparse
+import distutils
 import pasteboard
 from io import BytesIO
 from PIL import Image
 import numpy as np
+
+parser = argparse.ArgumentParser()
+parser.add_argument("--invert", default=False, action='store_true', help="Invert the image")
+args = parser.parse_args()
 
 BG = [58, 63, 74]
 FG = [221, 221, 221]
@@ -17,6 +23,9 @@ else:
     img: Image.Image = Image.open(in_stream)
 
     data = np.array(img.getdata())[:, :3] / 255  # RGB(A) to RGB, normalized
+
+    if args.invert:
+        data = 1.0 - data
 
     # Apply gradient map on the image
     # Reference: https://community.adobe.com/t5/photoshop/what-is-the-mathmatical-formula-of-gradient-map/td-p/10502214
